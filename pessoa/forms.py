@@ -21,4 +21,10 @@ class UserForm(ModelForm):
 class UserProfileForm(ModelForm):
     class Meta:
         model = Perfil
-        exclude = ['usuario']
+        exclude = ['usuario', 'seguindo']
+
+class UserEditorForm(ModelForm):
+    class Meta:
+        model = User
+        exclude = ['is_staff', 'is_active', 'date_joined', 'last_login',
+    'groups', 'user_permissions', 'id_superuser', 'password']

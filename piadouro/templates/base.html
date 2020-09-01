@@ -15,14 +15,14 @@
 <body>
 <!-- Dropdown Structure -->
 <ul id="dropdown1" class="dropdown-content">
-  <li><a href="#!">one</a></li>
+  <li><a href="{% url 'profile-editor' %}">configurações</a></li>
   <li><a href="#!">two</a></li>
   <li class="divider"></li>
   <li><a href="{% url 'admin:logout' %}">sair</a></li>
 </ul>
 <nav>
   <div class="nav-wrapper">
-    <a href="% url 'home' %" class="brand-logo">Logo</a>
+    <a href="{% url 'home' %}" class="brand-logo">Logo</a>
     <ul class="right hide-on-med-and-down">
     {% if not request.user.is_authenticated %}  
       <li><a href="{% url 'registration' %}">Criar conta</a></li>

@@ -1,14 +1,15 @@
 from django.views.generic.detail import DetailView
 from django.views.generic.list import ListView
-from django.views.generic.edit import CreateView
+from django.views.generic.edit import CreateView, UpdateView
 from django.views.generic.base import RedirectView
 from django.contrib.auth.models import User
 from django.shortcuts import get_object_or_404
 from pessoa.models import Perfil
 from django.contrib.auth.mixins import LoginRequiredMixin
-from pessoa.forms import UserProfileForm, UserForm
+from pessoa.forms import UserProfileForm, UserForm, UserEditorForm
 from django.shortcuts import redirect
 from django.contrib.auth import authenticate, login
+from django.urls import reverse
 
 class Home(LoginRequiredMixin, DetailView):
     template_name = 'home.html'
@@ -49,7 +50,10 @@ class Registration(CreateView):
     form_class = UserForm
 
     def get_context_data(self, *args, **kwargs):
-        context = {}
+        context = {
+            'action': reverse('registration'),
+            'button_text': 'Cadastrar'
+            }
         context['form'] = self.get_form()
         if self.request.method == 'POST':
             context['profile_form'] = UserProfileForm(self.request.POST, self.request.FILES)
@@ -73,6 +77,35 @@ class Registration(CreateView):
             )
             login(request, new_user)
             return redirect('home')
-        print(context['form'].errors)
-        print(context['profile_form'].errors)
+        return self.render_to_response(context)
+
+class ProfileEditor(LoginRequiredMixin, UpdateView):
+    model = User
+    template_name = 'create_user.html'
+    form_class = UserEditorForm
+
+    def get_object(self, queryset=None):
+        return get_object_or_404(self.model, id=self.request.user.id)
+        get_object_or_404(self.model, id=self.request.user.id)
+
+    def get_context_data(self, *args, **kwargs):
+        context = {
+            'action': reverse('profile-editor'),
+            'button_text': 'Atualizar'
+        }
+        self.object = self.get_object()
+        context['form'] = self.get_form()
+        if self.request.method == 'POST':
+            context['profile_form'] = UserProfileForm(self.request.POST, self.request.FILES, instance=self.object.perfil)
+        else:
+            context ['profile_form'] = UserProfileForm(instance=self.object.perfil)
+        return context
+
+    def post(self, request, *args, **kwargs):
+        context = self.get_context_data()
+
+        if context['form'].is_valid() and context['profile_form'].is_valid():
+            user = context['form'].save()
+            context ['profile_form'].save()
+            return redirect('home')
         return self.render_to_response(context)
