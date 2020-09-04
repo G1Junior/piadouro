@@ -9,7 +9,7 @@
       {% if profile.usuario != request.user %}
       <li class="collection-item avatar">
         <img src="{{ profile.foto.url }}" alt="" class="circle" />
-        <a href="{% url 'perfil'profile.usuario.username}" class="title">{{ profile.usuario.username.title }}</a>
+        <a href="{% url 'perfil' profile.usuario.username %}" class="title">{{ profile.usuario.username.title }}</a>
         <p>
           Seguidores: {{ profile.seguidores.count }} | Seguindo: {{ profile.seguindo.count }}
           <br />

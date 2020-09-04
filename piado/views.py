@@ -1,7 +1,10 @@
-from django.views.generic.edit import CreateView, DeleteView
+from django.views.generic.edit import CreateView, DeleteView, UpdateView
 from django.contrib.auth.mixins import LoginRequiredMixin
 from piado.models import Piado
 from django.urls import reverse, reverse_lazy
+from django.http import HttpResponseRedirect
+from django.core.exceptions import PermissionDenied
+
 
 
 class PiadoCreate(LoginRequiredMixin, CreateView):
@@ -17,14 +20,40 @@ class PiadoCreate(LoginRequiredMixin, CreateView):
 
 class PiadoDelete(LoginRequiredMixin, DeleteView):
     model = Piado
-    success_url = reverse_lazy ('home')
-
+    success_url = reverse_lazy('home')
+ 
     def get(self, request, *args, **kwargs):
-        return self.post(self, *args, **kwargs)
-
+        return self.post(self, request, *args, **kwargs)
+ 
+    def delete(self, request, *args, **kwargs):
         self.object = self.get_object()
-        if self.object.usuario.usuario.id != request.user.id:
-            raise HttpResponseNotAllwed
+        if self.object.usuario.usuario.id != request.request.user.id:
+            raise PermissionDenied
         success_url = self.get_success_url()
         self.object.delete()
-        return HtppResponseRedirect(success_url)
+        return HttpResponseRedirect(success_url)
+class PiadoLike(LoginRequiredMixin, UpdateView):
+    model = Piado
+    success_url = reverse_lazy('home')
+    
+    def get(self, request, *args, **kwargs):
+        success_url = reverse('perfil', args=[request.GET['next_user']])
+        self.object = self.get_object()
+        if self.object.curtidas.filter(id=request.user.perfil.id).exists():
+            self.object.curtidas.remove(request.user.perfil.id)
+        else:
+            self.object.curtidas.add(request.user.perfil.id)
+        return HttpResponseRedirect(success_url)
+
+class RePiado(LoginRequiredMixin, UpdateView):
+    model = Piado
+    success_url = reverse_lazy('home')
+    
+    def get(self, request, *args, **kwargs):
+        success_url = reverse('perfil', args=[request.GET['next_user']])
+        self.object = self.get_object()
+        if self.object.repiados.filter(id=request.user.perfil.id).exists():
+            self.object.repiados.remove(request.user.perfil.id)
+        else:
+            self.object.repiados.add(request.user.perfil.id)
+        return HttpResponseRedirect(success_url)
