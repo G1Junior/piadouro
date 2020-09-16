@@ -14,6 +14,9 @@
 }
 
 .checkbox {
+  height: 7rem;
+}
 
-  height:7rem;
+.no-margin {
+  margin: 0;
 }

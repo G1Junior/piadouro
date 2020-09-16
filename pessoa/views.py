@@ -13,18 +13,16 @@ from django.urls import reverse
 from piado.models import Piado
 from django.db.models import Q
 
+
 class Home(LoginRequiredMixin, DetailView):
     template_name = 'home.html'
     model = User
 
     def get_context_data(self, *args, **kwargs):
         context = super().get_context_data(*args, **kwargs)
-        context['piados'] = Piado.objects.filter(
-            Q(usuario=self.object.perfil) |
-            Q(repiados=self.object.perfil)
-        )
+        context['piados'] = Piado.objects.filter(proprietario=self.object)
         return context
-        
+
     def get_object(self):
         return get_object_or_404(self.model, username=self.kwargs['username'])
 
@@ -33,17 +31,18 @@ class UserList(LoginRequiredMixin, ListView):
     template_name = 'user_list.html'
     model = Perfil
 
+
 class Follow(LoginRequiredMixin, RedirectView):
     permanent = False
     query_string = False
     pattern_name = 'usuarios'
 
     def get_redirect_url(self, *args, **kwargs):
-        profile_to_follow = get_object_or_404(Perfil, pk=kwargs['profile_id'])
-        if self.request.user.perfil.seguindo.filter(pk=profile_to_follow.pk).exists():
-            self.request.user.perfil.seguindo.remove(profile_to_follow)
+        user_to_follow = get_object_or_404(User, pk=kwargs['user_id'])
+        if self.request.user.perfil.seguindo.filter(pk=user_to_follow.pk).exists():
+            self.request.user.perfil.seguindo.remove(user_to_follow)
         else:
-            self.request.user.perfil.seguindo.add(profile_to_follow)
+            self.request.user.perfil.seguindo.add(user_to_follow)
         return super().get_redirect_url()
 
 class RedirectHome(LoginRequiredMixin, RedirectView):
@@ -63,13 +62,14 @@ class Registration(CreateView):
         context = {
             'action': reverse('registration'),
             'button_text': 'Cadastrar'
-            }
+        }
         context['form'] = self.get_form()
         if self.request.method == 'POST':
             context['profile_form'] = UserProfileForm(self.request.POST, self.request.FILES)
         else:
-            context ['profile_form'] = UserProfileForm()
+            context['profile_form'] = UserProfileForm()
         return context
+
 
     def post(self, request, *args, **kwargs):
         context = self.get_context_data()
@@ -79,7 +79,7 @@ class Registration(CreateView):
             user.set_password(context['form'].cleaned_data['password'])
             user.save()
             context['profile_form'].instance.usuario = user
-            context ['profile_form'].save()
+            context['profile_form'].save()
             new_user = authenticate(
                 request,
                 username=context['form'].cleaned_data['username'],
@@ -96,7 +96,6 @@ class ProfileEditor(LoginRequiredMixin, UpdateView):
 
     def get_object(self, queryset=None):
         return get_object_or_404(self.model, id=self.request.user.id)
-        get_object_or_404(self.model, id=self.request.user.id)
 
     def get_context_data(self, *args, **kwargs):
         context = {
@@ -108,7 +107,7 @@ class ProfileEditor(LoginRequiredMixin, UpdateView):
         if self.request.method == 'POST':
             context['profile_form'] = UserProfileForm(self.request.POST, self.request.FILES, instance=self.object.perfil)
         else:
-            context ['profile_form'] = UserProfileForm(instance=self.object.perfil)
+            context['profile_form'] = UserProfileForm(instance=self.object.perfil)
         return context
 
     def post(self, request, *args, **kwargs):
@@ -116,6 +115,6 @@ class ProfileEditor(LoginRequiredMixin, UpdateView):
 
         if context['form'].is_valid() and context['profile_form'].is_valid():
             user = context['form'].save()
-            context ['profile_form'].save()
+            context['profile_form'].save()
             return redirect('home')
         return self.render_to_response(context)
